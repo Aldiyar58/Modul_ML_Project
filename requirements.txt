@@ -1,7 +1,9 @@
 streamlit>=1.26.0
+pandas
+plotly
+category_encoders
+scikit-learn
+numpy
+joblib
 matplotlib
 seaborn
-pandas
-scikit-learn
-ydata_profiling
-joblib
