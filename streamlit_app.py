@@ -8,7 +8,15 @@ from sklearn.metrics import roc_curve, auc
 
 model = joblib.load("svc_model.pkl")
 
-df = pd.read_csv("cardio_train.csv", sep=";")
+data = pd.read_csv("cardio_train.csv", sep=";")
+data.drop("id",axis=1,inplace=True)
+data.drop_duplicates(inplace=True)
+data["bmi"] = data["weight"] / (data["height"]/100)**2
+out_filter = ((data["ap_hi"]>250) | (data["ap_lo"]>200))
+data = data[~out_filter]
+
+out_filter2 = ((data["ap_hi"] < 0) | (data["ap_lo"] < 0))
+data = data[~out_filter2]
 
 # SIDEBAR:
 st.sidebar.header("Введите свои данные")
@@ -45,6 +53,7 @@ user_data = pd.DataFrame({
     "smoke": [smoke],
     "alco": [alco],
     "active": [active],
+    "bmi": weight / ((height / 100) ** 2)
 })
 
 st.title("🫀 Cardiovascular Disease Prediction App")
@@ -56,17 +65,17 @@ plot_choice = st.selectbox(
 
 if plot_choice == "Распределение классов":
     plt.figure(figsize=(6,4))
-    sns.countplot(x="cardio", data=df)
+    sns.countplot(x="cardio", data=data)
     st.pyplot(plt)
 
 elif plot_choice == "Корреляция признаков":
     plt.figure(figsize=(10,8))
-    sns.heatmap(df.corr(), annot=False, cmap="coolwarm")
+    sns.heatmap(data.corr(), annot=False, cmap="coolwarm")
     st.pyplot(plt)
 
 elif plot_choice == "Распределение возраста":
     plt.figure(figsize=(6,4))
-    sns.histplot(df["age"]/365, bins=30, kde=True)
+    sns.histplot(data["age"] / 365, bins=30, kde=True)
     plt.xlabel("Возраст (лет)")
     st.pyplot(plt)
 
@@ -74,8 +83,8 @@ elif plot_choice == "ROC-кривая":
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import roc_curve, auc
 
-    X = df.drop(columns=["cardio"])
-    y = df["cardio"]
+    X = data.drop(columns=["cardio"])
+    y = data["cardio"]
     _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     y_score = model.predict_proba(X_test)[:,1]
