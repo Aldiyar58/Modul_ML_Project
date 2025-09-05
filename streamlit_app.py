@@ -87,7 +87,7 @@ elif plot_choice == "ROC-кривая":
     y = data["cardio"]
     _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    y_score = model.predict_proba(X_test)[:,1]
+    y_score = model.decision_function(X_test)
     fpr, tpr, _ = roc_curve(y_test, y_score)
     roc_auc = auc(fpr, tpr)
 
@@ -102,7 +102,8 @@ elif plot_choice == "ROC-кривая":
 
 if st.sidebar.button("Сделать предсказание"):
     prediction = model.predict(user_data)[0]
-    proba = model.predict_proba(user_data)[0][1]
+    score = model.decision_function(user_data)[0]
+    proba = 1 / (1 + np.exp(-score))
 
     st.subheader("Результат предсказания")
     st.write(f"Вероятность наличия сердечно-сосудистого заболевания: **{proba:.2f}**")
